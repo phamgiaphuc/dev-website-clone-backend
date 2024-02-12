@@ -13,7 +13,7 @@ const generateRefreshToken = (user: any) => {
   return jwt.sign({
     id: user._id,
     email: user.email
-  }, SECRET_REFRESH_TOKEN, { expiresIn: REFRESH_TOKEN_LIFE });
+  }, SECRET_REFRESH_TOKEN);
 }
 
 const generateAccessToken = (user: any) => {
@@ -69,26 +69,17 @@ const userSignUp = async (req: Request, res: Response) => {
       },
       verification: {
         verified_code: generateVerificationCode()
-      }
+      },
     });
+    await UserModel.findByIdAndUpdate({ _id: user._id }, { refresh_token: generateRefreshToken(user) });
     if (!user.verification.is_verified) {
       await sendVerificationCode(user.verification.verified_code, user.email);
-      return res.status(StatusCodes.OK).json({
+      return res.status(StatusCodes.CREATED).json({
         "message": "User is not verifed. Please check your mail to get the verification code.",
         id: user._id, 
         is_verified: user.verification.is_verified
       });
     }
-    const refresh_token = generateRefreshToken(user);
-    const access_token = generateAccessToken(user);
-    await UserModel.findByIdAndUpdate({ _id: user._id }, { refresh_token });
-    res.cookie('user_rt', refresh_token, {
-      httpOnly: true,
-      secure: true,
-      // sameSite: 'none',
-      maxAge: +REFRESH_TOKEN_LIFE * 1000 // 1 day
-    })
-    return res.status(StatusCodes.CREATED).json({ access_token });
   } catch(error) {
     logger.error(error.message);
     if (error.code === 11000) {
@@ -152,10 +143,10 @@ const userSignIn = async (req: Request, res: Response) => {
         res.cookie('user_rt', user.refresh_token, {
           httpOnly: true,
           // secure: true,
-          sameSite: 'none',
+          // sameSite: 'none',
           maxAge: +REFRESH_TOKEN_LIFE * 1000 // 1 day
-        })
-        return res.status(StatusCodes.OK).json({ access_token });
+        });
+        return res.status(StatusCodes.OK).json({ access_token, email: user.email, role: user.role, profile: user.profile });
       }
     })
   } catch(error) {
@@ -164,29 +155,79 @@ const userSignIn = async (req: Request, res: Response) => {
   }
 }
 
+const userSignOut = (req: Request, res: Response) => {
+  res.cookie('user_rt', 'none', {
+    httpOnly: true,
+    expires: new Date(Date.now() + 5 * 1000),
+  });
+  return res.status(StatusCodes.OK).json({
+    "message": "User logged out successfully"
+  });
+}
+
 const userVerification = async (req: Request, res: Response) => {
-  const { id } = req.query;
-  const { code } = req.body;
-  const user = await UserModel.findById(id);
-  if (user.verification.verified_code === code) {
+  try {
+    const { id } = req.params;
+    const { code } = req.body;
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        "error": "User not found."
+      })
+    }
+    if (user.verification.verified_code === code) {
+      user.set({
+        verification: {
+          is_verified: true,
+        },
+      });
+      await user.save();
+      const access_token = generateAccessToken(user);
+      res.cookie('user_rt', user.refresh_token, {
+        httpOnly: true,
+        // secure: true,
+        // sameSite: 'none',
+        maxAge: +REFRESH_TOKEN_LIFE * 1000 // 1 day
+      })
+      return res.status(StatusCodes.OK).json({ access_token, email: user.email, role: user.role, profile: user.profile });
+    } else {
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        "error": "Verified code is invalid."
+      })
+    }
+  } catch (error) {
+    logger.error(error.message);
+    return res.status(StatusCodes.BAD_REQUEST).json(error.message);
+  }
+}
+
+const resendVerification = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        "error": "User not found."
+      })
+    }
+    if (user.verification.is_verified) {
+      return res.status(StatusCodes.ACCEPTED).json({is_verified: user.verification.is_verified});
+    }
+    const code = generateVerificationCode();
     user.set({
       verification: {
-        is_verified: true,
-      },
+        is_verified: user.verification.is_verified,
+        verified_code: code
+      }
     });
     await user.save();
-    const access_token = generateAccessToken(user);
-    res.cookie('user_rt', user.refresh_token, {
-      httpOnly: true,
-      // secure: true,
-      sameSite: 'none',
-      maxAge: +REFRESH_TOKEN_LIFE * 1000 // 1 day
-    })
-    return res.status(StatusCodes.OK).json({ access_token }); 
-  } else {
-    return res.status(StatusCodes.UNAUTHORIZED).json({
-      "error": "Verified code is invalid."
-    })
+    await sendVerificationCode(user.verification.verified_code, user.email);
+    return res.status(StatusCodes.OK).json({
+      "message": "Code is resend. Please check your mail to get the verification code.",
+    });
+  } catch (error) {
+    logger.error(error.message);
+    return res.status(StatusCodes.BAD_REQUEST).json(error.message);
   }
 }
 
@@ -215,10 +256,10 @@ const userRefreshToken = (req: Request, res: Response) => {
       res.cookie('user_rt', user.refresh_token, {
         httpOnly: true,
         // secure: true,
-        sameSite: 'none',
+        // sameSite: 'none',
         maxAge: +REFRESH_TOKEN_LIFE * 1000 // 1 day
       })
-      return res.status(StatusCodes.OK).json({ access_token }); 
+      return res.status(StatusCodes.OK).json({access_token, email: user.email, role: user.role, profile: user.profile}); 
     });
   } catch(error) {
     logger.error(error.message);
@@ -256,5 +297,5 @@ const userProfile = (req: Request, res: Response) => {
 }
 
 export const userController = {
-  userSignUp, userSignIn, userRefreshToken, userProfile, userVerification
+  userSignUp, userSignIn, userSignOut, userRefreshToken, userProfile, userVerification, resendVerification
 }

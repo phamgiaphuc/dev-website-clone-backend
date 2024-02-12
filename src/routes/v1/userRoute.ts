@@ -13,8 +13,10 @@ router.route('/')
 
 router.post('/signup', userController.userSignUp);
 router.post('/signin', userController.userSignIn);
+router.get('/signout', userController.userSignOut);
 router.get('/refresh', userController.userRefreshToken);
 router.get('/profile', userController.userProfile);
-router.get('/auth', userController.userVerification);
+router.get('/verification/:id', userController.resendVerification);
+router.post('/verification/:id', userController.userVerification);
 
 export const userRoute = router;
