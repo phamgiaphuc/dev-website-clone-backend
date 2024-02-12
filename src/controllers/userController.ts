@@ -8,13 +8,7 @@ import jwt from 'jsonwebtoken';
 import { emailRegex, passwordRegex } from "../utils/regexVars";
 import { SECRET_REFRESH_TOKEN, SECRET_ACCESS_TOKEN, ACCESS_TOKEN_LIFE, REFRESH_TOKEN_LIFE } from "../configs/environment";
 import { sendVerificationCode } from "../utils/mailService";
-import firebaseAuthKey from '../jsons/dev-website-clone-firebase-adminsdk-jz6bz-afc58301c1.json';
-import admin from 'firebase-admin';
 import { getAuth } from "firebase-admin/auth";
-
-admin.initializeApp({
-  credential: admin.credential.cert(firebaseAuthKey as admin.ServiceAccount)
-});
 
 const generateRefreshToken = (user: any) => {
   return jwt.sign({
@@ -221,7 +215,6 @@ const userGoogleAuth = (req: Request, res: Response) => {
       const refresh_token = generateRefreshToken(newUser);
       await UserModel.findByIdAndUpdate({ _id: newUser._id }, { refresh_token: refresh_token });
       const access_token = generateAccessToken(newUser);
-      console.log('end');
       res.cookie('user_rt', refresh_token, {
         httpOnly: true,
         // secure: true,

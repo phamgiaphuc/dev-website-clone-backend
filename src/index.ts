@@ -6,10 +6,15 @@ import { corsOption } from './configs/cors';
 import { api_v1s } from './routes/v1/route';
 import { logger, loggerMiddleware } from './configs/logger';
 import cookieParser from 'cookie-parser';
+import firebaseAuthKey from './jsons/dev-website-clone-firebase-adminsdk-jz6bz-afc58301c1.json';
+import admin from 'firebase-admin';
 
 // Variables
 const server = express();
 const PORT = process.env.PORT || 8000;
+admin.initializeApp({
+  credential: admin.credential.cert(firebaseAuthKey as admin.ServiceAccount)
+});
 
 // Middlewares
 server.use(cookieParser());
