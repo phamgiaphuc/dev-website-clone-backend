@@ -8,6 +8,13 @@ import jwt from 'jsonwebtoken';
 import { emailRegex, passwordRegex } from "../utils/regexVars";
 import { SECRET_REFRESH_TOKEN, SECRET_ACCESS_TOKEN, ACCESS_TOKEN_LIFE, REFRESH_TOKEN_LIFE } from "../configs/environment";
 import { sendVerificationCode } from "../utils/mailService";
+import firebaseAuthKey from '../jsons/dev-website-clone-firebase-adminsdk-jz6bz-afc58301c1.json';
+import admin from 'firebase-admin';
+import { getAuth } from "firebase-admin/auth";
+
+admin.initializeApp({
+  credential: admin.credential.cert(firebaseAuthKey as admin.ServiceAccount)
+});
 
 const generateRefreshToken = (user: any) => {
   return jwt.sign({
@@ -120,6 +127,13 @@ const userSignIn = async (req: Request, res: Response) => {
         "error": "User not found."
       })
     }
+    if (user.google_auth) {
+      return res.status(StatusCodes.OK).json({
+        "message": "Account was created using Google. Try log in with Google.",
+        id: user._id, 
+        google_auth: user.google_auth
+      });
+    }
     if (!user.verification.is_verified) {
       await sendVerificationCode(user.verification.verified_code, user.email);
       return res.status(StatusCodes.OK).json({
@@ -165,6 +179,63 @@ const userSignOut = (req: Request, res: Response) => {
   });
 }
 
+const userGoogleAuth = (req: Request, res: Response) => {
+  const { token } = req.body;
+  getAuth().verifyIdToken(token)
+    .then(async (decodedUser) => {
+      let { email, name, picture } = decodedUser;
+      picture = picture.replace("s96-c", "s384-c");
+      const user = await UserModel.findOne({ email });
+      if (user) {
+        const { google_auth, verification: { is_verified, verified_code }} = user;
+        if (is_verified && verified_code === null && !google_auth) {
+          return res.status(StatusCodes.FORBIDDEN).json({
+            "error": "This email was signed up without Google. Please sign in with password to access the account."
+          })
+        }
+        if (google_auth) {
+          const access_token = generateAccessToken(user);
+          res.cookie('user_rt', user.refresh_token, {
+            httpOnly: true,
+            // secure: true,
+            // sameSite: 'none',
+            maxAge: +REFRESH_TOKEN_LIFE * 1000 // 1 day
+          });
+          return res.status(StatusCodes.OK).json({ access_token, email: user.email, role: user.role, profile: user.profile });
+        }
+      }
+      const newUser = await UserModel.create({
+        email,
+        password: 'no-password',
+        profile: {
+          fullname: name,
+          username: formatUsername(email),
+          profile_img: picture
+        },
+        verification: {
+          is_verified: true,
+          verified_code: null
+        },
+        google_auth: true,
+      });
+      const refresh_token = generateRefreshToken(newUser);
+      await UserModel.findByIdAndUpdate({ _id: newUser._id }, { refresh_token: refresh_token });
+      const access_token = generateAccessToken(newUser);
+      console.log('end');
+      res.cookie('user_rt', refresh_token, {
+        httpOnly: true,
+        // secure: true,
+        // sameSite: 'none',
+        maxAge: +REFRESH_TOKEN_LIFE * 1000 // 1 day
+      });
+      return res.status(StatusCodes.OK).json({ access_token, email: newUser.email, role: newUser.role, profile: newUser.profile });
+    })
+    .catch((error) => {
+      logger.error(error.message);
+      return res.status(StatusCodes.BAD_REQUEST).json(error.message);
+    })
+}
+
 const userVerification = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -179,6 +250,7 @@ const userVerification = async (req: Request, res: Response) => {
       user.set({
         verification: {
           is_verified: true,
+          verified_code: null
         },
       });
       await user.save();
@@ -297,5 +369,5 @@ const userProfile = (req: Request, res: Response) => {
 }
 
 export const userController = {
-  userSignUp, userSignIn, userSignOut, userRefreshToken, userProfile, userVerification, resendVerification
+  userSignUp, userSignIn, userSignOut, userRefreshToken, userProfile, userVerification, resendVerification, userGoogleAuth
 }

@@ -13,6 +13,7 @@ router.route('/')
 
 router.post('/signup', userController.userSignUp);
 router.post('/signin', userController.userSignIn);
+router.post('/google-auth', userController.userGoogleAuth);
 router.get('/signout', userController.userSignOut);
 router.get('/refresh', userController.userRefreshToken);
 router.get('/profile', userController.userProfile);
