@@ -1,6 +1,5 @@
 import winston, { format, transports } from 'winston';
 import { v4 as uuidv4 } from 'uuid';
-import { NextFunction, Request, Response } from 'express';
 
 export const logger = winston.createLogger({
   level: 'info',
@@ -31,9 +30,3 @@ export const logger = winston.createLogger({
     // })
   ]
 });
-
-export const loggerMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const { method, url, ip } = req;
-  logger.info(`${method} ${url} ${ip}`);
-  next();
-}

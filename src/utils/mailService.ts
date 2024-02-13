@@ -27,7 +27,7 @@ export const sendVerificationCode = async (code: string, email: string) => {
     const mailOptions = {
       to: email,
       subject: 'Account Verification',
-      html: `<p>Your verification code is ${code}</p>`
+      html: `<h3>Your verification code is ${code}</h3>`
     }
     await transport.sendMail(mailOptions);
     logger.info(`Verification mail sent to ${email} successfully.`);

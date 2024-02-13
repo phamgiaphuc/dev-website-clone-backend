@@ -1,6 +1,7 @@
 import { userController } from '../../controllers/userController';
 import express from 'express';
 import { StatusCodes } from 'http-status-codes';
+import { authMiddleware } from '../../middlewares/authMiddleware';
 
 const router = express.Router();
 
@@ -11,13 +12,6 @@ router.route('/')
     });
   });
 
-router.post('/signup', userController.userSignUp);
-router.post('/signin', userController.userSignIn);
-router.post('/google-auth', userController.userGoogleAuth);
-router.get('/signout', userController.userSignOut);
-router.get('/refresh', userController.userRefreshToken);
-router.get('/profile', userController.userProfile);
-router.get('/verification/:id', userController.resendVerification);
-router.post('/verification/:id', userController.userVerification);
+router.get('/profile', authMiddleware, userController.userProfile);
 
 export const userRoute = router;

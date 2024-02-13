@@ -3,11 +3,12 @@ import 'dotenv/config';
 import { connectToDatabase } from './database/connect';
 import cors from 'cors';
 import { corsOption } from './configs/cors';
-import { api_v1s } from './routes/v1/route';
-import { logger, loggerMiddleware } from './configs/logger';
+import { api_v1s } from './routes/v1';
+import { logger } from './configs/logger';
 import cookieParser from 'cookie-parser';
 import firebaseAuthKey from './jsons/dev-website-clone-firebase-adminsdk-jz6bz-afc58301c1.json';
 import admin from 'firebase-admin';
+import { loggerMiddleware } from './middlewares/loggerMiddleware';
 
 // Variables
 const server = express();
