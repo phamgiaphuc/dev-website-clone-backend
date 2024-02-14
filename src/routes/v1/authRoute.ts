@@ -11,11 +11,11 @@ router.route('/')
     });
   });
 
-router.post('/signUp', authController.signUp);
+router.post('/signup', authController.signUp);
 router.post('/signin', authController.signIn);
-router.get('/signOut', authController.signOut);
+router.get('/signout', authController.signOut);
 router.post('/google-auth', authController.googleAuth);
 router.post('/verification/:id', authController.verificationCode);
-router.post('/refresh', authController.refreshToken);
+router.get('/refresh', authController.refreshToken);
 
 export const authRoute = router;

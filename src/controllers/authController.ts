@@ -5,7 +5,7 @@ import jwt, { JsonWebTokenError, JwtPayload } from 'jsonwebtoken';
 import { UserModel } from '../models/userModel';
 import { emailRegex, passwordRegex } from '../utils/regexVars';
 import { formatUsername } from '../utils/formatUsername';
-import { ACCESS_TOKEN_LIFE, REFRESH_TOKEN_LIFE, SECRET_ACCESS_TOKEN, SECRET_REFRESH_TOKEN } from '../configs/environment';
+import { ACCESS_TOKEN_LIFE, REFRESH_COOKIE_LIFE, REFRESH_TOKEN_LIFE, SECRET_ACCESS_TOKEN, SECRET_REFRESH_TOKEN } from '../configs/environment';
 import { sendVerificationCode } from '../utils/mailService';
 import { logger } from '../configs/logger';
 import { getAuth } from 'firebase-admin/auth';
@@ -117,13 +117,12 @@ const signIn = async (req: Request, res: Response) => {
     const user = await UserModel.findOne({ email });
     if (!user) {
       return res.status(StatusCodes.NOT_FOUND).json({
-        "error": "User not found"
+        "error": "User not found. Please sign up."
       })
     }
     if (user.google_auth) {
-      return res.status(StatusCodes.OK).json({
-        "message": "Account was created using Google. Try log in with Google",
-        google_auth: user.google_auth
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        "error": "Account was created using Google. Try log in with Google.",
       })
     }
     bcrypt.compare(password, user.password, async (error, result) => {
@@ -140,15 +139,25 @@ const signIn = async (req: Request, res: Response) => {
       if (!user.verification.is_verified) {
         await sendVerificationCode(user.verification.verified_code, user.email);
         return res.status(StatusCodes.OK).json({
-          "message": "The account is not verified. Please check your mail to get the verification code",
+          "message": "The account is not verified. Please check your mail to get the verification code.",
           id: user._id, 
           is_verified: user.verification.is_verified
         });
       }
-      const access_token = generateAccessToken(user);
-      const refresh_token = generateRefreshToken(user);
-      await UserModel.findByIdAndUpdate({ _id: user._id }, { refresh_token });
-      return res.status(StatusCodes.OK).json({ access_token, refresh_token });
+      const accessToken = generateAccessToken(user);
+      const refreshToken = generateRefreshToken(user);
+      user.set({
+        refresh_token: accessToken
+      })
+      await user.save();
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: false,
+        path: "/",
+        sameSite: "strict",
+        maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
+      });
+      return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, accessToken, refreshToken });
     });
   } catch (error) {
     logger.error(error.message);
@@ -157,13 +166,20 @@ const signIn = async (req: Request, res: Response) => {
 }
 
 const signOut = (req: Request, res: Response) => {
+  res.cookie('refreshToken', 'null', {
+    httpOnly: true,
+    secure: false,
+    path: "/",
+    sameSite: "strict",
+    expires: new Date(Date.now() + 500)
+  });
   return res.status(StatusCodes.OK).json({
     "message": "User sign out"
   })
 }
 
 const refreshToken = (req: Request, res: Response) => {
-  const { refresh_token } = req.body;
+  const { refreshToken } = req.cookies;
   if (!refreshToken) {
     return res.status(StatusCodes.UNAUTHORIZED).json({
       "error": "Unauthorized",
@@ -171,7 +187,7 @@ const refreshToken = (req: Request, res: Response) => {
     });
   }
   try {
-    jwt.verify(refresh_token, SECRET_REFRESH_TOKEN, async (error: JsonWebTokenError, decoded: JwtPayload) => {
+    jwt.verify(refreshToken, SECRET_REFRESH_TOKEN, async (error: JsonWebTokenError, decoded: JwtPayload) => {
       if (error) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
           "error": "Unauthorized",
@@ -179,15 +195,22 @@ const refreshToken = (req: Request, res: Response) => {
         });
       }
       const { id } = decoded;
-      const user = await UserModel.findById(id).where('refresh_token').equals(refresh_token);
+      const user = await UserModel.findById(id).where('refresh_token').equals(refreshToken);
       if (user) {
-        const access_token = generateAccessToken(user);
-        const refresh_token = generateRefreshToken(user);
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
         user.set({
-          refresh_token
+          refresh_token: refreshToken
         });
         await user.save();
-        return res.status(StatusCodes.OK).json({access_token, refresh_token});
+        res.cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+          secure: false,
+          path: "/",
+          sameSite: "strict",
+          maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
+        });
+        return res.status(StatusCodes.OK).json({ accessToken, refreshToken });
       }
       return res.status(StatusCodes.UNAUTHORIZED).json({
         "error": "Unauthorized",
@@ -215,10 +238,20 @@ const googleAuth = (req: Request, res: Response) => {
           });
         }
         if (googleAuth) {
-          const access_token = generateAccessToken(user);
-          const refresh_token = generateRefreshToken(user);
-          await UserModel.findByIdAndUpdate({ _id: user._id }, { refresh_token });
-          return res.status(StatusCodes.OK).json({ access_token, refresh_token });
+          const accessToken = generateAccessToken(user);
+          const refreshToken = generateRefreshToken(user);
+          user.set({
+            refresh_token: refreshToken
+          });
+          await user.save();
+          res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: false,
+            path: "/",
+            sameSite: "strict",
+            maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
+          });
+          return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, accessToken, refreshToken });
         }
       }
       const newUser = await UserModel.create({
@@ -235,10 +268,20 @@ const googleAuth = (req: Request, res: Response) => {
         },
         google_auth: true,
       });
-      const access_token = generateAccessToken(newUser);
-      const refresh_token = generateRefreshToken(newUser);
-      await UserModel.findByIdAndUpdate({ _id: newUser._id }, { refresh_token });
-      return res.status(StatusCodes.OK).json({ access_token, refresh_token });
+      const accessToken = generateAccessToken(newUser);
+      const refreshToken = generateRefreshToken(newUser);
+      newUser.set({
+        refresh_token: refreshToken
+      });
+      await newUser.save();
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: false,
+        path: "/",
+        sameSite: "strict",
+        maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
+      });
+      return res.status(StatusCodes.OK).json({ email: newUser.email, role: newUser.role, profile: newUser.profile, accessToken, refreshToken });
     })
     .catch((error) => {
       logger.error(error.message);
@@ -270,10 +313,13 @@ const verificationCode = async (req: Request, res: Response) => {
         },
       });
       await user.save();
-      const access_token = generateAccessToken(user);
-      const refresh_token = generateRefreshToken(user);
-      await UserModel.findByIdAndUpdate({ _id: user._id }, { refresh_token });
-      return res.status(StatusCodes.OK).json({ access_token, refresh_token });
+      const accessToken = generateAccessToken(user);
+      const refreshToken = generateRefreshToken(user);
+      user.set({
+        refresh_token: refreshToken
+      });
+      await user.save();
+      return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, accessToken, refreshToken });
     }
     return res.status(StatusCodes.UNAUTHORIZED).json({
       "error": "Verified code is invalid."
