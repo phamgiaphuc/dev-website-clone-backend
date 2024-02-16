@@ -14,14 +14,14 @@ const generateRefreshToken = (user: any) => {
   return jwt.sign({
     id: user._id,
     email: user.email
-  }, SECRET_REFRESH_TOKEN, { expiresIn: REFRESH_TOKEN_LIFE });
+  }, SECRET_REFRESH_TOKEN, { expiresIn: '5s' });
 }
 
 const generateAccessToken = (user: any) => {
   return jwt.sign({
     id: user._id,
     email: user.email
-  }, SECRET_ACCESS_TOKEN, { expiresIn: ACCESS_TOKEN_LIFE });
+  }, SECRET_ACCESS_TOKEN, { expiresIn: '5s' });
 }
 
 const generateVerificationCode = () => {
@@ -72,14 +72,12 @@ const signUp = async (req: Request, res: Response) => {
         verified_code: generateVerificationCode()
       }
     });
-    if (!user.verification.is_verified) {
-      await sendVerificationCode(user.verification.verified_code, user.email);
-      return res.status(StatusCodes.CREATED).json({
-        "message": "The account is not verified. Please check your mail to get the verification code",
-        id: user._id,
-        is_verified: user.verification.is_verified
-      });
-    }
+    await sendVerificationCode(user.verification.verified_code, user.email);
+    return res.status(StatusCodes.CREATED).json({
+      "message": "New account is created.",
+      id: user._id, 
+      is_verified: user.verification.is_verified
+    });
   } catch (error) {
     logger.error(error.message);
     if (error.code === 11000) {
@@ -195,7 +193,7 @@ const refreshToken = (req: Request, res: Response) => {
         });
       }
       const { id } = decoded;
-      const user = await UserModel.findById(id).where('refresh_token').equals(refreshToken);
+      const user = await UserModel.findById(id);
       if (user) {
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);

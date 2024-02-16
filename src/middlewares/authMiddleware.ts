@@ -9,14 +9,14 @@ export interface ExtendedRequest extends Request {
 
 export const authMiddleware = (req: ExtendedRequest, res: Response, next: NextFunction) => {
   try {
-    const access_token = req.header('Authorization').replace('Bearer', '').trim() // Bearer access_token
-    if (!access_token) {
+    const accessToken = req.header('Authorization').replace('Bearer', '').trim() // Bearer accessToken
+    if (!accessToken) {
       return res.status(StatusCodes.UNAUTHORIZED).json({
         "error": "Unauthorized",
         "auth": false
       });
     }
-    const data = jwt.verify(access_token, SECRET_ACCESS_TOKEN);
+    const data = jwt.verify(accessToken, SECRET_ACCESS_TOKEN);
     req.auth = data;
     return next();
   } catch(error) {

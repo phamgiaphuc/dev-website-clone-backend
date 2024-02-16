@@ -16,6 +16,6 @@ router.post('/signin', authController.signIn);
 router.get('/signout', authController.signOut);
 router.post('/google-auth', authController.googleAuth);
 router.post('/verification/:id', authController.verificationCode);
-router.get('/refresh', authController.refreshToken);
+router.get('/refresh-token', authController.refreshToken);
 
 export const authRoute = router;
