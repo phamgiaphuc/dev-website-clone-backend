@@ -9,7 +9,7 @@ export interface ExtendedRequest extends Request {
 
 export const authMiddleware = (req: ExtendedRequest, res: Response, next: NextFunction) => {
   try {
-    const accessToken = req.header('Authorization').replace('Bearer', '').trim() // Bearer accessToken
+    const accessToken = req.header('Authorization').split(' ')[1]; // Bearer accessToken
     if (!accessToken) {
       return res.status(StatusCodes.UNAUTHORIZED).json({
         "error": "Unauthorized",

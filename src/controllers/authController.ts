@@ -14,14 +14,14 @@ const generateRefreshToken = (user: any) => {
   return jwt.sign({
     id: user._id,
     email: user.email
-  }, SECRET_REFRESH_TOKEN, { expiresIn: '5s' });
+  }, SECRET_REFRESH_TOKEN, { expiresIn: REFRESH_TOKEN_LIFE });
 }
 
 const generateAccessToken = (user: any) => {
   return jwt.sign({
     id: user._id,
     email: user.email
-  }, SECRET_ACCESS_TOKEN, { expiresIn: '5s' });
+  }, SECRET_ACCESS_TOKEN, { expiresIn: ACCESS_TOKEN_LIFE });
 }
 
 const generateVerificationCode = () => {
@@ -145,7 +145,7 @@ const signIn = async (req: Request, res: Response) => {
       const accessToken = generateAccessToken(user);
       const refreshToken = generateRefreshToken(user);
       user.set({
-        refresh_token: accessToken
+        refresh_token: refreshToken
       })
       await user.save();
       res.cookie('refreshToken', refreshToken, {
@@ -164,13 +164,7 @@ const signIn = async (req: Request, res: Response) => {
 }
 
 const signOut = (req: Request, res: Response) => {
-  res.cookie('refreshToken', 'null', {
-    httpOnly: true,
-    secure: false,
-    path: "/",
-    sameSite: "strict",
-    expires: new Date(Date.now() + 500)
-  });
+  res.clearCookie('refreshToken');
   return res.status(StatusCodes.OK).json({
     "message": "User sign out"
   })
@@ -181,7 +175,7 @@ const refreshToken = (req: Request, res: Response) => {
   if (!refreshToken) {
     return res.status(StatusCodes.UNAUTHORIZED).json({
       "error": "Unauthorized",
-      "auth": false
+      "auth1": false
     });
   }
   try {
@@ -189,12 +183,12 @@ const refreshToken = (req: Request, res: Response) => {
       if (error) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
           "error": "Unauthorized",
-          "auth": false
+          "auth2": false
         });
       }
       const { id } = decoded;
       const user = await UserModel.findById(id);
-      if (user) {
+      if (user && user.refresh_token === refreshToken) {
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
         user.set({
@@ -212,7 +206,7 @@ const refreshToken = (req: Request, res: Response) => {
       }
       return res.status(StatusCodes.UNAUTHORIZED).json({
         "error": "Unauthorized",
-        "auth": false
+        "auth3": false
       });
     })
   } catch (error) {
