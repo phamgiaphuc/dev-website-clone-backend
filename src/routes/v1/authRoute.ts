@@ -1,6 +1,7 @@
 import { authController } from '../../controllers/authController';
 import express from 'express';
 import { StatusCodes } from 'http-status-codes';
+import { authMiddleware } from '../../middlewares/authMiddleware';
 
 const router = express.Router();
 

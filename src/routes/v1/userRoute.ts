@@ -8,6 +8,5 @@ const router = express.Router();
 router.get('/profile', authMiddleware, userController.userProfile);
 router.post('/update-profile', authMiddleware, userController.userUpdateProfile);
 router.post('/upload-profile-img', authMiddleware, upload.single('profile_img'), userController.userUploadProfileImg);
-router.get('/', authMiddleware, userController.getUsers);
 
 export const userRoute = router;

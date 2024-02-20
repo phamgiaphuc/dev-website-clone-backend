@@ -57,12 +57,6 @@ const userProfile = async (req: ExtendedRequest, res: Response) => {
   }
 }
 
-const getUsers = async (req: ExtendedRequest, res: Response) => {
-  return res.status(StatusCodes.OK).json({
-    "message": "Get user success"
-  })
-}
-
 export const userController = {
-  userProfile, getUsers, userUploadProfileImg, userUpdateProfile
+  userProfile, userUploadProfileImg, userUpdateProfile
 }
