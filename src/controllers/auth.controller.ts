@@ -2,38 +2,15 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
 import jwt, { JsonWebTokenError, JwtPayload } from 'jsonwebtoken';
-import { UserModel } from '../models/userModel';
+import { UserModel } from '../models/user.model';
 import { emailRegex, passwordRegex } from '../utils/regexVars';
 import { formatUsername } from '../utils/formatUsername';
-import { ACCESS_TOKEN_LIFE, REFRESH_COOKIE_LIFE, REFRESH_TOKEN_LIFE, SECRET_ACCESS_TOKEN, SECRET_REFRESH_TOKEN } from '../configs/environment';
-import { sendVerificationCode } from '../utils/mailService';
+import { REFRESH_COOKIE_LIFE, SECRET_REFRESH_TOKEN } from '../configs/environment';
+import { sendVerificationCode } from '../configs/mail';
 import { logger } from '../configs/logger';
 import { getAuth } from 'firebase-admin/auth';
-import { ExtendedRequest } from '../middlewares/authMiddleware';
-import { authModel } from '../models/authModel';
-
-const generateRefreshToken = (user: any) => {
-  return jwt.sign({
-    id: user._id,
-    email: user.email
-  }, SECRET_REFRESH_TOKEN, { expiresIn: REFRESH_TOKEN_LIFE });
-}
-
-const generateAccessToken = (user: any) => {
-  return jwt.sign({
-    id: user._id,
-    email: user.email
-  }, SECRET_ACCESS_TOKEN, { expiresIn: ACCESS_TOKEN_LIFE });
-}
-
-const generateVerificationCode = () => {
-  const codeLength = 6;
-  let code = "";
-  for (let i = 0; i < codeLength; i++) {
-    code += (Math.floor(Math.random() * 10));
-  }
-  return code;
-}
+import { authModel } from '../models/auth.model';
+import { generateVerificationCode, generateAccessToken, generateRefreshToken } from '../utils/authToken';
 
 const signUp = async (req: Request, res: Response) => {
   const { email, password, fullname } = req.body;
@@ -174,7 +151,7 @@ const signOut = async (req: Request, res: Response) => {
   })
 }
 
-const refreshToken = (req: ExtendedRequest, res: Response) => {
+const refreshToken = (req: Request, res: Response) => {
   const { refreshToken } = req.cookies;
   if (!refreshToken) {
     return res.status(StatusCodes.UNAUTHORIZED).json({
@@ -195,7 +172,7 @@ const refreshToken = (req: ExtendedRequest, res: Response) => {
       const { id } = decoded;
       const user = await UserModel.findById(id);
       const auth = await authModel.findOne({ userId: id });
-      if (user && auth && auth.refreshToken === refreshToken) {
+      if (user._id === auth.userId && auth.refreshToken === refreshToken) {
         const newAccessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshToken(user);
         await authModel.findByIdAndDelete(auth._id);

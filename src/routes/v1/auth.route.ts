@@ -1,7 +1,7 @@
-import { authController } from '../../controllers/authController';
+import { authController } from '../../controllers/auth.controller';
 import express from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { authMiddleware } from '../../middlewares/authMiddleware';
+import { authMiddleware } from '../../middlewares/auth.middleware';
 
 const router = express.Router();
 

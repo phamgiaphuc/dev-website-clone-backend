@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { OAuth2Client } from "google-auth-library"
-import { ADMIN_EMAIL_ADDRESS, GOOGLE_MAILER_CLIENT_ID, GOOGLE_MAILER_CLIENT_SECRET, GOOGLE_MAILER_REFRESH_TOKEN } from "../configs/environment";
-import { logger } from "../configs/logger";
+import { ADMIN_EMAIL_ADDRESS, GOOGLE_MAILER_CLIENT_ID, GOOGLE_MAILER_CLIENT_SECRET, GOOGLE_MAILER_REFRESH_TOKEN } from "./environment";
+import { logger } from "./logger";
 
 const mailOAuth2Client = new OAuth2Client(GOOGLE_MAILER_CLIENT_ID, GOOGLE_MAILER_CLIENT_SECRET);
 

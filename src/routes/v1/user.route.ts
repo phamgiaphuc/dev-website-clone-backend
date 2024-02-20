@@ -1,6 +1,6 @@
-import { userController } from '../../controllers/userController';
+import { userController } from '../../controllers/user.controller';
 import express from 'express';
-import { authMiddleware } from '../../middlewares/authMiddleware';
+import { authMiddleware } from '../../middlewares/auth.middleware';
 import { upload } from '../../configs/mutler';
 
 const router = express.Router();
