@@ -1,7 +1,7 @@
 import { authController } from '../../controllers/auth.controller';
 import express from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { authMiddleware } from '../../middlewares/auth.middleware';
+import { authValidationMiddleware, signInValidationOption, signUpValidationOption, signOutValidationOption, verficationValidationOption } from '../../middlewares/auth.validation.middleware';
 
 const router = express.Router();
 
@@ -12,11 +12,11 @@ router.route('/')
     });
   });
 
-router.post('/signup', authController.signUp);
-router.post('/signin', authController.signIn);
-router.get('/signout', authController.signOut);
+router.post('/signup', signUpValidationOption(), authValidationMiddleware, authController.signUp);
+router.post('/signin', signInValidationOption(), authValidationMiddleware, authController.signIn);
+router.get('/signout', signOutValidationOption(), authValidationMiddleware, authController.signOut);
 router.post('/google-auth', authController.googleAuth);
-router.post('/verification/:id', authController.verificationCode);
+router.post('/verification/:id', verficationValidationOption(), authValidationMiddleware, authController.verificationCode);
 router.get('/refresh-token', authController.refreshToken);
 
 export const authRoute = router;

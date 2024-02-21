@@ -9,36 +9,12 @@ import { REFRESH_COOKIE_LIFE, SECRET_REFRESH_TOKEN } from '../configs/environmen
 import { sendVerificationCode } from '../configs/mail';
 import { logger } from '../configs/logger';
 import { getAuth } from 'firebase-admin/auth';
-import { authModel } from '../models/auth.model';
+import { AuthModel } from '../models/auth.model';
 import { generateVerificationCode, generateAccessToken, generateRefreshToken } from '../utils/authToken';
 
 const signUp = async (req: Request, res: Response) => {
   const { email, password, fullname } = req.body;
-  if (!email.length) {
-    return res.status(StatusCodes.FORBIDDEN).json({
-      "error": "Email is missing"
-    });
-  }
-  if (!password.length) {
-    return res.status(StatusCodes.FORBIDDEN).json({
-      "error": "Password is missing"
-    })
-  }
-  if (!emailRegex.test(email)) {
-    return res.status(StatusCodes.FORBIDDEN).json({
-      "error": "Email is invalid"
-    })
-  }
-  if (!passwordRegex.test(password)) {
-    return res.status(StatusCodes.FORBIDDEN).json({
-      "error": "Password is invalid"
-    })
-  }
-  if (fullname.length < 3) {
-    return res.status(StatusCodes.FORBIDDEN).json({
-      "error": "Full name must be 3 characters long"
-    })
-  }
+  console.log(email, password, fullname);
   try {
     const user = await UserModel.create({
       email,
@@ -70,26 +46,6 @@ const signUp = async (req: Request, res: Response) => {
 
 const signIn = async (req: Request, res: Response) => {
   const { email, password } = req.body;
-  if (!email.length) {
-    return res.status(StatusCodes.FORBIDDEN).json({
-      "error": "Email is missing."
-    });
-  }
-  if (!password.length) {
-    return res.status(StatusCodes.FORBIDDEN).json({
-      "error": "Password is missing."
-    });
-  }
-  if (!emailRegex.test(email)) {
-    return res.status(StatusCodes.FORBIDDEN).json({
-      "error": "Email is invalid."
-    });
-  }
-  if (!passwordRegex.test(password)) {
-    return res.status(StatusCodes.FORBIDDEN).json({
-      "error": "Password should be 6 to 20 characters long with a numeric, 1 lowercase and 1 uppercase."
-    })
-  }
   try {
     const user = await UserModel.findOne({ email });
     if (!user) {
@@ -123,7 +79,7 @@ const signIn = async (req: Request, res: Response) => {
       }
       const accessToken = generateAccessToken(user);
       const refreshToken = generateRefreshToken(user);
-      await authModel.create({
+      await AuthModel.create({
         userId: user._id,
         refreshToken: refreshToken
       });
@@ -144,7 +100,7 @@ const signIn = async (req: Request, res: Response) => {
 
 const signOut = async (req: Request, res: Response) => {
   const { refreshToken } = req.cookies;
-  await authModel.findOneAndDelete({ refreshToken });
+  await AuthModel.findOneAndDelete({ refreshToken });
   res.clearCookie('refreshToken');
   return res.status(StatusCodes.OK).json({
     "message": "User sign out"
@@ -156,29 +112,29 @@ const refreshToken = (req: Request, res: Response) => {
   if (!refreshToken) {
     return res.status(StatusCodes.UNAUTHORIZED).json({
       "error": "Unauthorized",
-      "auth": false
+      "auth1": false
     });
   }
-  try {
-    jwt.verify(refreshToken, SECRET_REFRESH_TOKEN, async (error: JsonWebTokenError, decoded: JwtPayload) => {
-      if (error) {
-        await authModel.findOneAndDelete({ refreshToken });
-        res.clearCookie('refreshToken', refreshToken);
-        return res.status(StatusCodes.UNAUTHORIZED).json({
-          "error": "Unauthorized",
-          "auth": false
-        });
-      }
-      const { id } = decoded;
+  jwt.verify(refreshToken, SECRET_REFRESH_TOKEN, async (error: JsonWebTokenError, decoded: JwtPayload) => {
+    if (error) {
+      await AuthModel.findOneAndDelete({ refreshToken: refreshToken });
+      res.clearCookie('refreshToken', refreshToken);
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        "error": "Unauthorized",
+        "auth2": false
+      });
+    }
+    const { id } = decoded;
+    try {
       const user = await UserModel.findById(id);
-      const auth = await authModel.findOne({ userId: id });
-      if (user._id === auth.userId && auth.refreshToken === refreshToken) {
+      const auth = await AuthModel.findOne({ refreshToken: refreshToken });
+      if (user._id.equals(auth.userId) && auth.refreshToken === refreshToken) {
         const newAccessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshToken(user);
-        await authModel.findByIdAndDelete(auth._id);
-        await authModel.create({
+        await AuthModel.findByIdAndDelete(auth._id);
+        await AuthModel.create({
           userId: user._id,
-          refreshToken: refreshToken
+          refreshToken: newRefreshToken
         });
         res.cookie('refreshToken', newRefreshToken, {
           httpOnly: true,
@@ -189,16 +145,16 @@ const refreshToken = (req: Request, res: Response) => {
         });
         return res.status(StatusCodes.OK).json({ accessToken: newAccessToken });
       }
+    } catch (error) {
+      logger.error(error.message);
+      await AuthModel.findOneAndDelete({ refreshToken: refreshToken });
       res.clearCookie('refreshToken', refreshToken);
       return res.status(StatusCodes.UNAUTHORIZED).json({
         "error": "Unauthorized",
-        "auth": false
+        "auth3": false
       });
-    })
-  } catch (error) {
-    logger.error(error.message);
-    return res.status(StatusCodes.BAD_REQUEST).json(error.message);
-  }
+    }
+  })
 }
 
 const googleAuth = (req: Request, res: Response) => {
@@ -218,7 +174,7 @@ const googleAuth = (req: Request, res: Response) => {
         if (googleAuth) {
           const accessToken = generateAccessToken(user);
           const refreshToken = generateRefreshToken(user);
-          await authModel.create({
+          await AuthModel.create({
             userId: user._id,
             refreshToken: refreshToken
           });
@@ -249,7 +205,7 @@ const googleAuth = (req: Request, res: Response) => {
       await newUser.save();
       const accessToken = generateAccessToken(newUser);
       const refreshToken = generateRefreshToken(newUser);
-      await authModel.create({
+      await AuthModel.create({
         userId: newUser._id,
         refreshToken: refreshToken
       });
@@ -294,7 +250,7 @@ const verificationCode = async (req: Request, res: Response) => {
       await user.save();
       const accessToken = generateAccessToken(user);
       const refreshToken = generateRefreshToken(user);
-      await authModel.create({
+      await AuthModel.create({
         userId: user._id,
         refreshToken: refreshToken
       });
