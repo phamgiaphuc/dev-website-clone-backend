@@ -16,14 +16,21 @@ const userUploadProfileImg = async (req: Request, res: Response) => {
     contentType: req.file.mimetype,
     cacheControl: "public, max-age=31536000",
   }
-  await getStorage().bucket().file(`images/${filename}`).save(req.file.buffer, {
-    metadata: metadata
-  });
-  const download_url = `https://firebasestorage.googleapis.com/v0/b/dev-website-clone.appspot.com/o/images%2F${filename}?alt=media&token=${token}`
-  return res.status(StatusCodes.OK).json({
-    "message": "File uploaded",
-    "url": download_url
-  });
+  try {
+    await getStorage().bucket().file(`images/${filename}`).save(req.file.buffer, {
+      metadata: metadata
+    });
+    const download_url = `https://firebasestorage.googleapis.com/v0/b/dev-website-clone.appspot.com/o/images%2F${filename}?alt=media&token=${token}`
+    return res.status(StatusCodes.OK).json({
+      "message": "File uploaded",
+      "url": download_url
+    });
+  } catch (error) {
+    logger.error(error.message);
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      "error": "Uploaded fail"
+    })
+  }
 }
 
 const userUpdateProfile = async (req: Request, res: Response) => {

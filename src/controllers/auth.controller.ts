@@ -14,7 +14,6 @@ import { generateVerificationCode, generateAccessToken, generateRefreshToken } f
 
 const signUp = async (req: Request, res: Response) => {
   const { email, password, fullname } = req.body;
-  console.log(email, password, fullname);
   try {
     const user = await UserModel.create({
       email,
