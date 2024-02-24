@@ -1,4 +1,4 @@
-<h1 align="center">MERN DEV Clone Website</h1>
+<h1 align="center">MERN DEV Clone Website - Backend</h1>
 
 ## Contents
 
@@ -10,7 +10,7 @@
 ## Brief description
 
 - This is DEV Clone Website built with MERN stack. (The official website of DEV: [https://dev.to/ ](https://dev.to/))
-- Project link (GitHub): [mern-airbnb-clone](https://github.com/phamgiaphuc/mern-airbnb-clone)
+- Project link (GitHub): [Backend side](https://github.com/phamgiaphuc/dev-website-clone-backend) and [Frontend side](https://github.com/phamgiaphuc/dev-website-clone-frontend)
 - Project's author: Pham Gia Phuc - Acus
 - Personal profile: [MyProfile](https://github.com/phamgiaphuc)
 
@@ -97,5 +97,3 @@ A DEV clone website with some main features:
 - Verfied account with a code sent to the user's email by Google email
 
 ![](./images/VerificationPage.png)
-
-![](./images/VerificationCode.jpg)
