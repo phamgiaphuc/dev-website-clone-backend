@@ -68,13 +68,13 @@ A DEV clone website with some main features:
 - [x] Update profile page: User's information and images (Firebase storage)
 - [x] Display profile page with user's information and blogs
 - [ ] Renter user's password
-- [ ] Create post/blog page
+- [x] Create post/blog page
 - [ ] Dashboard page with user's post and relevant infos
 
 3. Blog
 
-- [ ] Editor page
-- [ ] Preview page
+- [x] Editor page
+- [x] Preview page
 - [ ] Blog page
 
 4. Others
