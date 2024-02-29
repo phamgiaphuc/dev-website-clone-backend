@@ -36,6 +36,14 @@ const userUploadProfileImg = async (req: Request, res: Response) => {
 const userUpdateProfile = async (req: Request, res: Response) => {
   try {
     const id = get(req, "auth.id") as string;
+    const checkUser = await UserModel.find({
+      "profile.username": req.body.profile.username
+    });
+    if (checkUser) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        "error": "Username is already existed"
+      })
+    };
     await UserModel.findByIdAndUpdate(id, req.body);
     const user = await UserModel.findById(id);
     return res.status(StatusCodes.OK).json({ email: user.email, profile: user.profile });
@@ -49,14 +57,15 @@ const userUpdateProfile = async (req: Request, res: Response) => {
 
 const userProfile = async (req: Request, res: Response) => {
   try {
-    const id = get(req, "auth.id") as string;
-    const user = await UserModel.findById(id);
+    const user = await UserModel.findOne({
+      "profile.username": req.params.username
+    });
     if (!user) {
       return res.status(StatusCodes.NOT_FOUND).json({
         "error": "User not found"
       });
     }
-    return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile }); 
+    return res.status(StatusCodes.OK).json({ email: user.email, profile: user.profile }); 
   } catch(error) {
     logger.error(error.message);
     return res.status(StatusCodes.BAD_REQUEST).json(error.message);
