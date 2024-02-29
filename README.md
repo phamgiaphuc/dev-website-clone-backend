@@ -42,6 +42,7 @@
 ![Axios Badge](https://img.shields.io/badge/Axios-5A29E4?logo=axios&logoColor=fff&style=flat)
 ![JSON Web Tokens Badge](https://img.shields.io/badge/JSON%20Web%20Tokens-000?logo=jsonwebtokens&logoColor=fff&style=flat)
 ![ESLint Badge](https://img.shields.io/badge/ESLint-4B32C3?logo=eslint&logoColor=fff&style=flat)
+![Framer Badge](https://img.shields.io/badge/Framer-05F?logo=framer&logoColor=fff&style=flat)
 
 - Other tools:
 
@@ -96,3 +97,27 @@ A DEV clone website with some main features:
 - Verfied account with a code sent to the user's email by Google email
 
 ![](./images/VerificationPage.png)
+
+2. User
+
+- Update profile page: User's information and images (Firebase storage)
+
+![](./images/ProfilePage.png)
+
+- Display profile page with user's information and blogs
+
+![](./images/UserPage.png)
+
+3. Blog
+
+- Editor page
+
+![](./images/EditorPage.png)
+
+- Preview page
+
+![](./images/PreviewPage.png)
+
+- Blog page
+
+![](./images/BlogPage.png)

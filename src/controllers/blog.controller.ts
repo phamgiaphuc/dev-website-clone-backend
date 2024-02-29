@@ -5,6 +5,7 @@ import { StatusCodes } from "http-status-codes";
 import { v4 as uuidv4 } from 'uuid';
 import { get } from "lodash";
 import { BlogModel } from "../models/blog.model";
+import { UserModel } from "../models/user.model";
 
 const blogUploadCoverImg = async (req: Request, res: Response) => {
   const token = uuidv4();
@@ -51,9 +52,11 @@ export const createNewBlog = async (req: Request, res: Response) => {
 
 export const getUserBlogs = async (req: Request, res: Response) => {
   try {
-    const id = get(req, "auth.id") as string;
+    const user = await UserModel.findOne({
+      "profile.username": req.params.username
+    });
     const blogs = await BlogModel.find({
-      author: id,
+      author: user._id,
       publish: req.query?.publish
     }).sort({ createdAt: req.query?.sort === 'desc' ? -1 : 1})
     return res.status(StatusCodes.CREATED).json(blogs);
@@ -68,15 +71,11 @@ export const getUserBlogs = async (req: Request, res: Response) => {
 export const getBlog = async (req: Request, res: Response) => {
   try {
     const { blogId } = req.params;
-    const id = get(req, "auth.id") as string;
     const blog = await BlogModel.findById(blogId).populate({
       path: "author",
       select: "email profile created_at"
     });
-    return res.status(StatusCodes.OK).json({
-      blog,
-      isOwner: blog.author?._id.toString() === id ? true : false
-    });
+    return res.status(StatusCodes.OK).json(blog);
   } catch(error) {
     logger.error(error.message);
     return res.status(StatusCodes.BAD_REQUEST).json({

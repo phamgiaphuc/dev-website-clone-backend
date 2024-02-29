@@ -5,7 +5,7 @@ import { upload } from '../../configs/mutler';
 
 const router = express.Router();
 
-router.get('/profile', authMiddleware, userController.userProfile);
+router.get('/:username', userController.userProfile);
 router.post('/update-profile', authMiddleware, userController.userUpdateProfile);
 router.post('/upload-profile-img', authMiddleware, upload.single('profile_img'), userController.userUploadProfileImg);
 
