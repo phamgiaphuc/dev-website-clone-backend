@@ -49,7 +49,7 @@ export const createNewBlog = async (req: Request, res: Response) => {
   }
 }
 
-export const getBlogs = async (req: Request, res: Response) => {
+export const getUserBlogs = async (req: Request, res: Response) => {
   try {
     const id = get(req, "auth.id") as string;
     const blogs = await BlogModel.find({
@@ -60,7 +60,7 @@ export const getBlogs = async (req: Request, res: Response) => {
   } catch(error) {
     logger.error(error.message);
     return res.status(StatusCodes.BAD_REQUEST).json({
-      "error": "Get blogs failed"
+      "error": "Get user blogs failed"
     })
   }
 }
@@ -68,15 +68,37 @@ export const getBlogs = async (req: Request, res: Response) => {
 export const getBlog = async (req: Request, res: Response) => {
   try {
     const { blogId } = req.params;
-    return res.status(StatusCodes.OK).json(await BlogModel.findById(blogId));
+    const id = get(req, "auth.id") as string;
+    const blog = await BlogModel.findById(blogId).populate({
+      path: "author",
+      select: "email profile created_at"
+    });
+    return res.status(StatusCodes.OK).json({
+      blog,
+      isOwner: blog.author?._id.toString() === id ? true : false
+    });
   } catch(error) {
     logger.error(error.message);
     return res.status(StatusCodes.BAD_REQUEST).json({
-      "error": "Get blogs failed"
+      "error": "Get user blog failed"
+    })
+  }
+}
+
+export const getAllBlogs = async (req: Request, res: Response) => {
+  try {
+    return res.status(StatusCodes.OK).json(await BlogModel.find().populate({
+      path: "author",
+      select: "profile.profile_img profile.username profile.fullname"
+    }).sort({ createdAt: req.query?.sort === 'desc' ? -1 : 1}));
+  } catch(error) {
+    logger.error(error.message);
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      "error": "Get all blogs failed"
     })
   }
 }
 
 export const blogController = {
-  blogUploadCoverImg, createNewBlog, getBlogs, getBlog
+  blogUploadCoverImg, createNewBlog, getUserBlogs, getBlog, getAllBlogs
 }

@@ -36,6 +36,14 @@ const userUploadProfileImg = async (req: Request, res: Response) => {
 const userUpdateProfile = async (req: Request, res: Response) => {
   try {
     const id = get(req, "auth.id") as string;
+    const checkUser = await UserModel.find({
+      "profile.username": req.body.profile.username
+    });
+    if (checkUser) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        "error": "Username is already existed"
+      })
+    };
     await UserModel.findByIdAndUpdate(id, req.body);
     const user = await UserModel.findById(id);
     return res.status(StatusCodes.OK).json({ email: user.email, profile: user.profile });
