@@ -1,10 +1,11 @@
 import mongoose, { Schema } from 'mongoose';
 import { emailRegex } from '../utils/regexVars';
+import UserDocument from '../props/UserDocument';
 
 const profile_imgs_name_list = ["Garfield", "Tinkerbell", "Annie", "Loki", "Cleo", "Angel", "Bob", "Mia", "Coco", "Gracie", "Bear", "Bella", "Abby", "Harley", "Cali", "Leo", "Luna", "Jack", "Felix", "Kiki"];
 const profile_imgs_collections_list = ["notionists-neutral", "adventurer-neutral", "fun-emoji"];
 
-const userSchema = new Schema({
+const userSchema = new Schema<UserDocument>({
   email: {
     type: String,
     unique: true,
@@ -107,10 +108,7 @@ const userSchema = new Schema({
   },
 },
 {
-  timestamps: {
-    createdAt: 'created_at',
-    updatedAt: 'updated_at'
-  }
+  timestamps: true
 });
 
-export const UserModel = mongoose.model('Users', userSchema);
+export const UserModel = mongoose.model<UserDocument>('Users', userSchema);

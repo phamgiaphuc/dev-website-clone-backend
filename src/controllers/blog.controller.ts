@@ -73,7 +73,7 @@ export const getBlog = async (req: Request, res: Response) => {
     const { blogId } = req.params;
     const blog = await BlogModel.findById(blogId).populate({
       path: "author",
-      select: "email profile created_at"
+      select: "email profile createdAt"
     });
     return res.status(StatusCodes.OK).json(blog);
   } catch(error) {
@@ -86,7 +86,9 @@ export const getBlog = async (req: Request, res: Response) => {
 
 export const getAllBlogs = async (req: Request, res: Response) => {
   try {
-    return res.status(StatusCodes.OK).json(await BlogModel.find().populate({
+    return res.status(StatusCodes.OK).json(await BlogModel.find({
+      publish: req.query?.publish
+    }).populate({
       path: "author",
       select: "profile.profile_img profile.username profile.fullname"
     }).sort({ createdAt: req.query?.sort === 'desc' ? -1 : 1}));
@@ -98,6 +100,22 @@ export const getAllBlogs = async (req: Request, res: Response) => {
   }
 }
 
+export const getRecentBlogsByDate = async (req: Request, res: Response) => {
+  try {
+    return res.status(StatusCodes.OK).json(await BlogModel.find({
+      publish: req.query?.publish
+    }).populate({
+      path: "author",
+      select: "profile.username"
+    }).sort({ createdAt: -1 }).limit(+req.query?.limit));
+  } catch(error) {
+    logger.error(error.message);
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      "error": "Get recent blogs failed"
+    })
+  }
+}
+
 export const blogController = {
-  blogUploadCoverImg, createNewBlog, getUserBlogs, getBlog, getAllBlogs
+  blogUploadCoverImg, createNewBlog, getUserBlogs, getBlog, getAllBlogs, getRecentBlogsByDate
 }

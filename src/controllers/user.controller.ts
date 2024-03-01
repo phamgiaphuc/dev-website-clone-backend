@@ -5,6 +5,7 @@ import { logger } from "../configs/logger";
 import { getStorage } from "firebase-admin/storage";
 import { v4 as uuidv4 } from 'uuid';
 import { get } from "lodash";
+import { IdTokenClient } from "google-auth-library";
 
 const userUploadProfileImg = async (req: Request, res: Response) => {
   const token = uuidv4();
@@ -36,17 +37,17 @@ const userUploadProfileImg = async (req: Request, res: Response) => {
 const userUpdateProfile = async (req: Request, res: Response) => {
   try {
     const id = get(req, "auth.id") as string;
-    const checkUser = await UserModel.find({
+    const checkUser = await UserModel.findOne({
       "profile.username": req.body.profile.username
     });
-    if (checkUser) {
+    if (!checkUser._id.equals(id)) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         "error": "Username is already existed"
       })
     };
     await UserModel.findByIdAndUpdate(id, req.body);
-    const user = await UserModel.findById(id);
-    return res.status(StatusCodes.OK).json({ email: user.email, profile: user.profile });
+    const user = await UserModel.findById(id, 'email profile created_at');
+    return res.status(StatusCodes.OK).json(user);
   } catch(error) {
     logger.error(error.message);
     return res.status(StatusCodes.BAD_REQUEST).json({
@@ -59,13 +60,13 @@ const userProfile = async (req: Request, res: Response) => {
   try {
     const user = await UserModel.findOne({
       "profile.username": req.params.username
-    });
+    }, "");
     if (!user) {
       return res.status(StatusCodes.NOT_FOUND).json({
         "error": "User not found"
       });
     }
-    return res.status(StatusCodes.OK).json({ email: user.email, profile: user.profile }); 
+    return res.status(StatusCodes.OK).json({ email: user.email, profile: user.profile, createdAt: user.createdAt }); 
   } catch(error) {
     logger.error(error.message);
     return res.status(StatusCodes.BAD_REQUEST).json(error.message);
