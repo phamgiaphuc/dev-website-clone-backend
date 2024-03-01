@@ -3,7 +3,6 @@ import bcrypt from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
 import jwt, { JsonWebTokenError, JwtPayload } from 'jsonwebtoken';
 import { UserModel } from '../models/user.model';
-import { emailRegex, passwordRegex } from '../utils/regexVars';
 import { formatUsername } from '../utils/formatUsername';
 import { REFRESH_COOKIE_LIFE, SECRET_REFRESH_TOKEN } from '../configs/environment';
 import { sendVerificationCode } from '../configs/mail';
@@ -89,7 +88,7 @@ const signIn = async (req: Request, res: Response) => {
         sameSite: "strict",
         maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
       });
-      return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, accessToken });
+      return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, createdAt: user.createdAt, accessToken });
     });
   } catch (error) {
     logger.error(error.message);
@@ -184,7 +183,7 @@ const googleAuth = (req: Request, res: Response) => {
             sameSite: "strict",
             maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
           });
-          return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, accessToken });
+          return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, createdAt: user.createdAt, accessToken });
         }
       }
       const newUser = await UserModel.create({
@@ -215,7 +214,7 @@ const googleAuth = (req: Request, res: Response) => {
         sameSite: "strict",
         maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
       });
-      return res.status(StatusCodes.OK).json({ email: newUser.email, role: newUser.role, profile: newUser.profile, accessToken });
+      return res.status(StatusCodes.OK).json({ email: newUser.email, role: newUser.role, profile: newUser.profile, createdAt: newUser.createdAt, accessToken });
     })
     .catch((error) => {
       logger.error(error.message);
@@ -260,7 +259,7 @@ const verificationCode = async (req: Request, res: Response) => {
         sameSite: "strict",
         maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
       });
-      return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, accessToken });
+      return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, createdAt: user.createdAt, accessToken });
     }
     return res.status(StatusCodes.UNAUTHORIZED).json({
       "error": "Verified code is invalid."

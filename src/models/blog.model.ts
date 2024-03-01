@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
+import BlogDocument from "../props/BlogDocuement";
 
-const blogSchema = new Schema({
+const blogSchema = new Schema<BlogDocument>({
   title: {
     type: String,
     required: true
@@ -30,18 +31,14 @@ const blogSchema = new Schema({
     ref: 'Users'
   },
   reactions: {
-    likes: {
-      type: Number,
-      default: 0
-    },
-    comments: {
-      type: Number,
-      default: 0
-    }
-  },
-  comments: {
-    type: Schema.Types.ObjectId,
-    ref: 'comments'
+    likes: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Users'
+    }],
+    comments: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Comments'
+    }]
   },
   draft: {
     type: Boolean,
@@ -51,9 +48,9 @@ const blogSchema = new Schema({
     type: Boolean,
     default: false
   },
-  createdAt: {
-    type: Date,
-  }
+},
+{
+  timestamps: true
 });
 
 export const BlogModel = mongoose.model('blogs', blogSchema);

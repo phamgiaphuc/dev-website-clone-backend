@@ -80,7 +80,7 @@ A DEV clone website with some main features:
 
 4. Others
 
-- [ ] Home page
+- [x] Home page
 - [ ] Search page
 - [ ] Info page
 
@@ -121,3 +121,9 @@ A DEV clone website with some main features:
 - Blog page
 
 ![](./images/BlogPage.png)
+
+4. Others
+
+- Home page
+
+![](./images/HomePage.png)
