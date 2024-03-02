@@ -5,7 +5,9 @@ import { logger } from "../configs/logger";
 import { getStorage } from "firebase-admin/storage";
 import { v4 as uuidv4 } from 'uuid';
 import { get } from "lodash";
-import { IdTokenClient } from "google-auth-library";
+import bcrypt from 'bcrypt';
+import { BlogModel } from "../models/blog.model";
+import { AuthModel } from "../models/auth.model";
 
 const userUploadProfileImg = async (req: Request, res: Response) => {
   const token = uuidv4();
@@ -37,14 +39,6 @@ const userUploadProfileImg = async (req: Request, res: Response) => {
 const userUpdateProfile = async (req: Request, res: Response) => {
   try {
     const id = get(req, "auth.id") as string;
-    const checkUser = await UserModel.findOne({
-      "profile.username": req.body.profile.username
-    });
-    if (!checkUser._id.equals(id)) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        "error": "Username is already existed"
-      })
-    };
     await UserModel.findByIdAndUpdate(id, req.body);
     const user = await UserModel.findById(id, 'email profile created_at');
     return res.status(StatusCodes.OK).json(user);
@@ -73,6 +67,64 @@ const userProfile = async (req: Request, res: Response) => {
   }
 }
 
+const userResetPassword = async (req: Request, res:Response) => {
+  try {
+    const id = get(req, "auth.id") as string;
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    if (newPassword !== confirmPassword) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        "error": "Passwords do not match"
+      })
+    }
+    const user = await UserModel.findById(id);
+    bcrypt.compare(currentPassword, user.password, async (error, result) => {
+      if (error) {
+        return res.status(StatusCodes.FORBIDDEN).json({
+          "error": "Error occured while reset please try again"
+        });
+      }
+      if (!result) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+          "error": "Incorrect password"
+        });
+      }
+      user.set({
+        password: await bcrypt.hash(newPassword, 10)
+      })
+      await user.save();
+      return res.status(StatusCodes.OK).json({
+        "message": "Reset password success"
+      })
+    });
+  } catch(error) {
+    logger.error(error.message);
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      "error": "Reset password failed"
+    });
+  }
+}
+
+export const userDeleteAccount = async (req: Request, res: Response) => {
+  try {
+    const { refreshToken } = req.cookies;
+    const id = get(req, "auth.id") as string;
+    await BlogModel.deleteMany({
+      author: id
+    });
+    await AuthModel.findOneAndDelete({ refreshToken });
+    await UserModel.findByIdAndDelete(id);
+    res.clearCookie('refreshToken');
+    return res.status(StatusCodes.OK).json({
+      "message": "Delete account success and user sign out"
+    })
+  } catch(error) {
+    logger.error(error.message);
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      "error": "Delete account failed"
+    });
+  }
+}
+
 export const userController = {
-  userProfile, userUploadProfileImg, userUpdateProfile
+  userProfile, userUploadProfileImg, userUpdateProfile, userResetPassword, userDeleteAccount
 }

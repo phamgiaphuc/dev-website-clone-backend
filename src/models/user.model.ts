@@ -1,6 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import { emailRegex } from '../utils/regexVars';
-import UserDocument from '../props/UserDocument';
+import UserDocument from '../props/user.props';
 
 const profile_imgs_name_list = ["Garfield", "Tinkerbell", "Annie", "Loki", "Cleo", "Angel", "Bob", "Mia", "Coco", "Gracie", "Bear", "Bella", "Abby", "Harley", "Cali", "Leo", "Luna", "Jack", "Felix", "Kiki"];
 const profile_imgs_collections_list = ["notionists-neutral", "adventurer-neutral", "fun-emoji"];
@@ -50,7 +50,8 @@ const userSchema = new Schema<UserDocument>({
     },
     username: {
       type: String,
-      required: true
+      required: true,
+      unique: true
     },
     bio: {
       type: String,
@@ -60,11 +61,6 @@ const userSchema = new Schema<UserDocument>({
     address: {
       type: String,
       maxLength: [100, 'Address should not be more than 100 letters.'],
-      default: ''
-    },
-    phone_number: {
-      type: String,
-      maxLength: [10, 'Phone should not be more than 10 letters.'],
       default: ''
     },
     profile_img: {

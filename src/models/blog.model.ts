@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import BlogDocument from "../props/BlogDocuement";
+import BlogDocument from "../props/blog.props";
 
 const blogSchema = new Schema<BlogDocument>({
   title: {
