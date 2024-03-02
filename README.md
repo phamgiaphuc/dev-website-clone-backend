@@ -68,7 +68,7 @@ A DEV clone website with some main features:
 
 - [x] Update profile page: User's information and images (Firebase storage)
 - [x] Display profile page with user's information and blogs
-- [ ] Renter user's password
+- [x] Reset user's password
 - [x] Create post/blog page
 - [ ] Dashboard page with user's post and relevant infos
 
@@ -107,6 +107,10 @@ A DEV clone website with some main features:
 - Display profile page with user's information and blogs
 
 ![](./images/UserPage.png)
+
+- Reset user's password
+
+![](./images/AccountPage.png)
 
 3. Blog
 

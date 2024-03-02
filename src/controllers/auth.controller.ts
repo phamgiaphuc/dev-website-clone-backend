@@ -25,7 +25,7 @@ const signUp = async (req: Request, res: Response) => {
         verified_code: generateVerificationCode()
       }
     });
-    await sendVerificationCode(user.verification.verified_code, user.email);
+    await sendVerificationCode(user.verification.verified_code, user.email, user.profile.fullname);
     return res.status(StatusCodes.CREATED).json({
       "message": "New account is created.",
       id: user._id, 
@@ -68,7 +68,7 @@ const signIn = async (req: Request, res: Response) => {
         });
       }
       if (!user.verification.is_verified) {
-        await sendVerificationCode(user.verification.verified_code, user.email);
+        await sendVerificationCode(user.verification.verified_code, user.email, user.profile.fullname);
         return res.status(StatusCodes.OK).json({
           "message": "The account is not verified. Please check your mail to get the verification code.",
           id: user._id, 
@@ -88,7 +88,7 @@ const signIn = async (req: Request, res: Response) => {
         sameSite: "strict",
         maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
       });
-      return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, createdAt: user.createdAt, accessToken });
+      return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, createdAt: user.createdAt, google_auth: user.google_auth, accessToken });
     });
   } catch (error) {
     logger.error(error.message);
@@ -183,7 +183,7 @@ const googleAuth = (req: Request, res: Response) => {
             sameSite: "strict",
             maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
           });
-          return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, createdAt: user.createdAt, accessToken });
+          return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, createdAt: user.createdAt, google_auth: user.google_auth, accessToken });
         }
       }
       const newUser = await UserModel.create({
@@ -214,7 +214,7 @@ const googleAuth = (req: Request, res: Response) => {
         sameSite: "strict",
         maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
       });
-      return res.status(StatusCodes.OK).json({ email: newUser.email, role: newUser.role, profile: newUser.profile, createdAt: newUser.createdAt, accessToken });
+      return res.status(StatusCodes.OK).json({ email: newUser.email, role: newUser.role, profile: newUser.profile, createdAt: newUser.createdAt, google_auth: newUser.google_auth, accessToken });
     })
     .catch((error) => {
       logger.error(error.message);
@@ -259,7 +259,7 @@ const verificationCode = async (req: Request, res: Response) => {
         sameSite: "strict",
         maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
       });
-      return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, createdAt: user.createdAt, accessToken });
+      return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, createdAt: user.createdAt, google_auth: user.google_auth, accessToken });
     }
     return res.status(StatusCodes.UNAUTHORIZED).json({
       "error": "Verified code is invalid."

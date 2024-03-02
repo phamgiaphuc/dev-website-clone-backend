@@ -14,7 +14,6 @@ interface UserDocument extends Document {
     username: string;
     bio: string;
     address: string;
-    phone_number: string;
     profile_img: string;
     branding_color: string;
     social_links: {
