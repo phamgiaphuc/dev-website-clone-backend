@@ -5,13 +5,13 @@ const authSchema = new Schema({
   userId: {
     type: Schema.Types.ObjectId,
     required: true,
-    ref: 'users'
+    ref: 'Users'
   },
   refreshToken: {
     type: String,
     required: true
   },
-  expireAt: {
+  expiredAt: {
     type: Date,
     expires: +REFRESH_COOKIE_LIFE * 60,
     default: () => {
