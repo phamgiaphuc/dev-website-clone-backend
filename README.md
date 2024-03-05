@@ -131,3 +131,15 @@ A DEV clone website with some main features:
 - Home page
 
 ![](./images/HomePage.png)
+
+## Cookie configs
+
+```js
+res.cookie('refreshToken', refreshToken, {
+  httpOnly: false,
+  secure: true,
+  path: '/',
+  sameSite: 'None', // Set to None for cross-site contexts
+  maxAge: +REFRESH_COOKIE_LIFE * 1000, // 1 day
+});
+```
