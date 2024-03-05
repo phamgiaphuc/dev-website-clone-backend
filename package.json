@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon",
-    "build": "yarn install & tsc",
+    "build": "yarn run install & tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
