@@ -4,7 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 import jwt from 'jsonwebtoken';
 import { merge } from 'lodash';
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const authTokenMiddleware = (req: Request, res: Response, next: NextFunction) => {
   try {
     const accessToken = req.header('Authorization').split(' ')[1];
     const data = jwt.verify(accessToken, SECRET_ACCESS_TOKEN);
