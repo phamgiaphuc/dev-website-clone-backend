@@ -8,6 +8,7 @@ import { get } from "lodash";
 import bcrypt from 'bcrypt';
 import { BlogModel } from "../models/blog.model";
 import { AuthModel } from "../models/auth.model";
+import { DashboardModel } from "models/dashboard.model";
 
 const userUploadProfileImg = async (req: Request, res: Response) => {
   const token = uuidv4();
@@ -111,6 +112,7 @@ export const userDeleteAccount = async (req: Request, res: Response) => {
     await BlogModel.deleteMany({
       author: id
     });
+    await DashboardModel.findOneAndDelete({ userId: id });
     await AuthModel.findOneAndDelete({ refreshToken });
     await UserModel.findByIdAndDelete(id);
     res.clearCookie('refreshToken');
