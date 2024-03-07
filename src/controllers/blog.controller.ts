@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { get } from "lodash";
 import { BlogModel } from "../models/blog.model";
 import { UserModel } from "../models/user.model";
+import { DashboardModel } from "../models/dashboard.model";
 
 const blogUploadCoverImg = async (req: Request, res: Response) => {
   const token = uuidv4();
@@ -28,7 +29,7 @@ const blogUploadCoverImg = async (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error(error.message);
-    return res.status(StatusCodes.BAD_REQUEST).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       "error": "Uploaded fail"
     })
   }
@@ -44,13 +45,13 @@ export const createNewBlog = async (req: Request, res: Response) => {
     return res.status(StatusCodes.CREATED).json(blog);
   } catch(error) {
     logger.error(error.message);
-    return res.status(StatusCodes.BAD_REQUEST).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       "error": "Created new blog fail"
     })
   }
 }
 
-export const getUserBlogs = async (req: Request, res: Response) => {
+export const getUserPublishBlogs = async (req: Request, res: Response) => {
   try {
     const user = await UserModel.findOne({
       "profile.username": req.params.username
@@ -58,15 +59,32 @@ export const getUserBlogs = async (req: Request, res: Response) => {
     const blogs = await BlogModel.find({
       author: user._id,
       publish: req.query?.publish
-    }).sort({ createdAt: req.query?.sort === 'desc' ? -1 : 1})
-    return res.status(StatusCodes.CREATED).json(blogs);
+    }).sort({ createdAt: req.query?.sort === 'desc' ? -1 : 1 });
+    return res.status(StatusCodes.OK).json(blogs);
   } catch(error) {
     logger.error(error.message);
-    return res.status(StatusCodes.BAD_REQUEST).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       "error": "Get user blogs failed"
     })
   }
 }
+
+export const getAllUserBlogs = async (req: Request, res: Response) => {
+  try {
+    const id = get(req, "auth.id") as string;
+    return res.status(StatusCodes.OK).json(
+      await BlogModel.find({
+        author: id
+      }).sort({ createdAt: req.query?.sort === 'desc' ? -1 : 1 })
+    );
+  } catch(error) {
+    logger.error(error.message);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      "error": "Get user blogs failed"
+    })
+  }
+}
+
 
 export const getBlog = async (req: Request, res: Response) => {
   try {
@@ -78,13 +96,13 @@ export const getBlog = async (req: Request, res: Response) => {
     return res.status(StatusCodes.OK).json(blog);
   } catch(error) {
     logger.error(error.message);
-    return res.status(StatusCodes.BAD_REQUEST).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       "error": "Get user blog failed"
     })
   }
 }
 
-export const getAllBlogs = async (req: Request, res: Response) => {
+export const getAllPublishBlogs = async (req: Request, res: Response) => {
   try {
     return res.status(StatusCodes.OK).json(await BlogModel.find({
       publish: req.query?.publish
@@ -94,7 +112,7 @@ export const getAllBlogs = async (req: Request, res: Response) => {
     }).sort({ createdAt: req.query?.sort === 'desc' ? -1 : 1}));
   } catch(error) {
     logger.error(error.message);
-    return res.status(StatusCodes.BAD_REQUEST).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       "error": "Get all blogs failed"
     })
   }
@@ -110,12 +128,29 @@ export const getRecentBlogsByDate = async (req: Request, res: Response) => {
     }).sort({ createdAt: -1 }).limit(+req.query?.limit));
   } catch(error) {
     logger.error(error.message);
-    return res.status(StatusCodes.BAD_REQUEST).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      "error": "Get recent blogs failed"
+    })
+  }
+}
+
+export const getUserGeneralBlogData = async (req: Request, res: Response) => {
+  try {
+    const id = get(req, "auth.id") as string;
+    const generalData = {
+      totalBlogs: await BlogModel.countDocuments({ author: id }),
+      dashboard: await DashboardModel.findOne({ userId: id }).populate({ path: "followingUsers", select: "profile.profile_img profile.username profile.fullname"})
+    }
+    return res.status(StatusCodes.OK).json(generalData);
+  } catch(error) {
+    logger.error(error.message);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       "error": "Get recent blogs failed"
     })
   }
 }
 
 export const blogController = {
-  blogUploadCoverImg, createNewBlog, getUserBlogs, getBlog, getAllBlogs, getRecentBlogsByDate
+  blogUploadCoverImg, createNewBlog, getUserPublishBlogs, getBlog, getAllPublishBlogs, getRecentBlogsByDate, getUserGeneralBlogData,
+  getAllUserBlogs
 }
