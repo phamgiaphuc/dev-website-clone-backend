@@ -70,7 +70,7 @@ A DEV clone website with some main features:
 - [x] Display profile page with user's information and blogs
 - [x] Reset user's password
 - [x] Create post/blog page
-- [ ] Dashboard page with user's post and relevant infos
+- [x] Dashboard page with user's post and relevant infos
 
 3. Blog
 
@@ -82,7 +82,8 @@ A DEV clone website with some main features:
 
 - [x] Home page
 - [ ] Search page
-- [ ] Info page
+- [x] Info page
+- [x] Not found page
 
 ## Images
 
