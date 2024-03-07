@@ -1,8 +1,8 @@
 import express, { Request, Response, Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { userRoute } from './user.route';
-import { authRoute } from './auth.route';
-import { blogRoute } from './blog.route';
+import { userRoute } from './users.routes';
+import { authRoute } from './auths.routes';
+import { blogRoute } from './blogs.routes';
 
 const router = express.Router();
 

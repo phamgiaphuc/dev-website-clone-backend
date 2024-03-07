@@ -27,6 +27,7 @@ const signUp = async (req: Request, res: Response) => {
     });
     await sendVerificationCode(user.verification.verified_code, user.email, user.profile.fullname);
     return res.status(StatusCodes.CREATED).json({
+      "success": true,
       "message": "New account is created.",
       id: user._id, 
       is_verified: user.verification.is_verified
@@ -34,11 +35,12 @@ const signUp = async (req: Request, res: Response) => {
   } catch (error) {
     logger.error(error.message);
     if (error.code === 11000) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
+      return res.status(StatusCodes.CONFLICT).json({
+        "success": false,
         "error": "User already existed. Please sign in."
       });
     }
-    return res.status(StatusCodes.BAD_REQUEST).json(error.message);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error.message);
   }
 }
 
@@ -48,28 +50,33 @@ const signIn = async (req: Request, res: Response) => {
     const user = await UserModel.findOne({ email });
     if (!user) {
       return res.status(StatusCodes.NOT_FOUND).json({
+        "success": false,
         "error": "User not found. Please sign up."
       })
     }
     if (user.google_auth) {
       return res.status(StatusCodes.UNAUTHORIZED).json({
+        "success": false,
         "error": "Account was created using Google. Try log in with Google.",
       })
     }
     bcrypt.compare(password, user.password, async (error, result) => {
       if (error) {
         return res.status(StatusCodes.FORBIDDEN).json({
+          "success": false,
           "error": "Error occured while login please try again"
         });
       }
       if (!result) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
+          "success": false,
           "error": "Incorrect password"
         });
       }
       if (!user.verification.is_verified) {
         await sendVerificationCode(user.verification.verified_code, user.email, user.profile.fullname);
         return res.status(StatusCodes.OK).json({
+          "success": false,
           "message": "The account is not verified. Please check your mail to get the verification code.",
           id: user._id, 
           is_verified: user.verification.is_verified
@@ -88,11 +95,11 @@ const signIn = async (req: Request, res: Response) => {
         sameSite: "strict",
         maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
       });
-      return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, createdAt: user.createdAt, google_auth: user.google_auth, accessToken });
+      return res.status(StatusCodes.OK).json({ "success": true, email: user.email, role: user.role, profile: user.profile, createdAt: user.createdAt, google_auth: user.google_auth, accessToken });
     });
   } catch (error) {
     logger.error(error.message);
-    return res.status(StatusCodes.BAD_REQUEST).json(error.message);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error.message);
   }
 }
 

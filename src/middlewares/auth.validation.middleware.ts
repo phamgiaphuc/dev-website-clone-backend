@@ -47,7 +47,8 @@ export const authValidationMiddleware = (req: Request, res: Response, next: Next
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(StatusCodes.BAD_REQUEST).json({
-      "error": errors.array()
+      "success": false,
+      "errors": errors.array()
     });
   }
   return next();

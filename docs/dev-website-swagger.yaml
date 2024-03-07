@@ -1,0 +1,193 @@
+openapi: 3.0.3
+info:
+  title: DEV Clone Website - OpenAPI 3.0
+  description: |-
+    This is DEV Clone Website built with MERN stack. (The official website of DEV: [https://dev.to/ ](https://dev.to/))
+    
+    Project link GitHub: 
+      - Backend: [Backend side](https://github.com/phamgiaphuc/dev-website-clone-backend)
+      - Frontend: [Frontend side](https://github.com/phamgiaphuc/dev-website-clone-frontend)
+  contact:
+    email: acuscodinghcm@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/v1
+  - url: http://localhost:8000/v1
+tags:
+  - name: auths
+    description: Everything about Authentication and Authorization
+  - name: users
+    description: Everything about user's functionality
+  - name: blogs
+    description: Everything about blog's functionality
+paths:
+  /auths/signup:
+    post: 
+      tags:
+        - auths
+      summary: Signing up an new account
+      operationId: signUp
+      requestBody:
+        description: User signs up an new account
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  description: Need a valid email to recieve verification code
+                  type: string
+                  example: example@gmail.com
+                password:
+                  description: Password should be 6 to 20 characters long with a numeric, 1 lowercase and 1 uppercase
+                  type: string
+                  example: example123
+                fullname:
+                  type: string
+                  example: Nguyen Van A
+        required: true
+      responses:
+        '201': 
+          description: 'New account is created'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    default: 'New account is created'
+                  id:
+                    type: string
+                    format: objectId
+                    example: '507f1f77bcf86cd799439011'
+                  is_verified:
+                    type: boolean
+                    default: false
+        '400': 
+          description: 'Missing fields'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          default: 'field'
+                        msg:
+                          type: string
+                          example: 'Missing email'
+                        path: 
+                          type: string
+                          example: 'email'
+                        location: 
+                          type: string
+                          example: 'body'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "User already exists. Please sign in."
+        '500':
+          description: Internal Server Error
+  /auths/signin:
+    post: 
+      tags:
+        - auths
+      summary: Signing in an account
+      operationId: signIn
+      requestBody:
+        description: User signs in an account
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  description: Need a valid email
+                  type: string
+                  example: example@gmail.com
+                password:
+                  description: Password should be 6 to 20 characters long with a numeric, 1 lowercase and 1 uppercase
+                  type: string
+                  example: example123
+        required: true
+      responses:
+        '404': 
+          description: 'User is not found'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  error:
+                    type: string
+                    default: 'User not found. Please sign up.'
+        '400': 
+          description: 'Missing fields'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          default: 'field'
+                        msg:
+                          type: string
+                          example: 'Missing email'
+                        path: 
+                          type: string
+                          example: 'email'
+                        location: 
+                          type: string
+                          example: 'body'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "User already exists. Please sign in."
+        '500':
+          description: Internal Server Error
+
