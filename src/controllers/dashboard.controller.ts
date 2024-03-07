@@ -11,13 +11,11 @@ const checkIsFollowed = async (req: Request, res: Response) => {
     const dashboard = await DashboardModel.findOne({
       userId: id
     });
-    console.log(dashboard.followingUsers);
-    console.log(authorId);
     const isFollowed = dashboard.followingUsers.some(userId => userId.equals(authorId));
     return res.status(StatusCodes.OK).json({ isFollowed });
   } catch(error) {
     logger.error(error.message);
-    return res.status(StatusCodes.BAD_REQUEST).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       "error": "Can not check user's dashboard"
     })
   }
@@ -44,7 +42,7 @@ const followUser = async (req: Request, res: Response) => {
     });
   } catch(error) {
     logger.error(error.message);
-    return res.status(StatusCodes.BAD_REQUEST).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       "error": "Can not follow user"
     })
   }
@@ -62,7 +60,7 @@ const unFollowUser = async (req: Request, res: Response) => {
     });
   } catch(error) {
     logger.error(error.message);
-    return res.status(StatusCodes.BAD_REQUEST).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       "error": "Can not unfollow user"
     })
   }

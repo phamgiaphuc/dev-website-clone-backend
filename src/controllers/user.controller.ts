@@ -8,7 +8,7 @@ import { get } from "lodash";
 import bcrypt from 'bcrypt';
 import { BlogModel } from "../models/blog.model";
 import { AuthModel } from "../models/auth.model";
-import { DashboardModel } from "models/dashboard.model";
+import { DashboardModel } from "../models/dashboard.model";
 
 const userUploadProfileImg = async (req: Request, res: Response) => {
   const token = uuidv4();
@@ -61,7 +61,7 @@ const userProfile = async (req: Request, res: Response) => {
         "error": "User not found"
       });
     }
-    return res.status(StatusCodes.OK).json({ email: user.email, profile: user.profile, createdAt: user.createdAt }); 
+    return res.status(StatusCodes.OK).json({ email: user.email, profile: user.profile, createdAt: user.createdAt, id: user._id }); 
   } catch(error) {
     logger.error(error.message);
     return res.status(StatusCodes.BAD_REQUEST).json(error.message);
