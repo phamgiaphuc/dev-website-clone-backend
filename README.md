@@ -113,6 +113,10 @@ A DEV clone website with some main features:
 
 ![](./images/AccountPage.png)
 
+- Dashboard page with user's post and relevant infos
+
+![](./images/DashboardPage.png)
+
 3. Blog
 
 - Editor page
