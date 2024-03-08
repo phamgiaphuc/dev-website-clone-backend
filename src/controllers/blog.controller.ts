@@ -75,7 +75,7 @@ export const getAllUserBlogs = async (req: Request, res: Response) => {
     return res.status(StatusCodes.OK).json(
       await BlogModel.find({
         author: id
-      }).sort({ createdAt: req.query?.sort === 'desc' ? -1 : 1 })
+      }).limit(2).skip(+req.query?.page * 2).sort({ createdAt: req.query?.sort === 'desc' ? -1 : 1 })
     );
   } catch(error) {
     logger.error(error.message);
