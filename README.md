@@ -144,7 +144,7 @@ res.cookie('refreshToken', refreshToken, {
   httpOnly: false,
   secure: true,
   path: '/',
-  sameSite: 'None', // Set to None for cross-site contexts
+  sameSite: 'none', // Set to None for cross-site contexts
   maxAge: +REFRESH_COOKIE_LIFE * 1000, // 1 day
 });
 ```

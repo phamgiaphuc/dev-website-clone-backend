@@ -89,11 +89,11 @@ const signIn = async (req: Request, res: Response) => {
         refreshToken: refreshToken
       });
       res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: false,
-        path: "/",
-        sameSite: "strict",
-        maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
+        httpOnly: false,
+        secure: true,
+        path: '/',
+        sameSite: 'none', // Set to None for cross-site contexts
+        maxAge: +REFRESH_COOKIE_LIFE * 1000, // 1 day
       });
       return res.status(StatusCodes.OK).json({ "success": true, email: user.email, role: user.role, profile: user.profile, createdAt: user.createdAt, google_auth: user.google_auth, accessToken });
     });
@@ -142,11 +142,11 @@ const refreshToken = (req: Request, res: Response) => {
           refreshToken: newRefreshToken
         });
         res.cookie('refreshToken', newRefreshToken, {
-          httpOnly: true,
-          secure: false,
-          path: "/",
-          sameSite: "strict",
-          maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
+          httpOnly: false,
+          secure: true,
+          path: '/',
+          sameSite: 'none', // Set to None for cross-site contexts
+          maxAge: +REFRESH_COOKIE_LIFE * 1000, // 1 day
         });
         return res.status(StatusCodes.OK).json({ accessToken: newAccessToken });
       }
@@ -184,11 +184,11 @@ const googleAuth = (req: Request, res: Response) => {
             refreshToken: refreshToken
           });
           res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            secure: false,
-            path: "/",
-            sameSite: "strict",
-            maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
+            httpOnly: false,
+            secure: true,
+            path: '/',
+            sameSite: 'none', // Set to None for cross-site contexts
+            maxAge: +REFRESH_COOKIE_LIFE * 1000, // 1 day
           });
           return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, createdAt: user.createdAt, google_auth: user.google_auth, accessToken });
         }
@@ -215,11 +215,11 @@ const googleAuth = (req: Request, res: Response) => {
         refreshToken: refreshToken
       });
       res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: false,
-        path: "/",
-        sameSite: "strict",
-        maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
+        httpOnly: false,
+        secure: true,
+        path: '/',
+        sameSite: 'none', // Set to None for cross-site contexts
+        maxAge: +REFRESH_COOKIE_LIFE * 1000, // 1 day
       });
       return res.status(StatusCodes.OK).json({ email: newUser.email, role: newUser.role, profile: newUser.profile, createdAt: newUser.createdAt, google_auth: newUser.google_auth, accessToken });
     })
@@ -260,11 +260,11 @@ const verificationCode = async (req: Request, res: Response) => {
         refreshToken: refreshToken
       });
       res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: false,
-        path: "/",
-        sameSite: "strict",
-        maxAge: +REFRESH_COOKIE_LIFE * 1000 // 1 day
+        httpOnly: false,
+        secure: true,
+        path: '/',
+        sameSite: 'none', // Set to None for cross-site contexts
+        maxAge: +REFRESH_COOKIE_LIFE * 1000, // 1 day
       });
       return res.status(StatusCodes.OK).json({ email: user.email, role: user.role, profile: user.profile, createdAt: user.createdAt, google_auth: user.google_auth, accessToken });
     }
